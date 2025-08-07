@@ -124,3 +124,97 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.date_of_birth})"
+
+
+class AppointmentSlot(models.Model):
+    DAY_CHOICES = [
+        ("monday", "Monday"),
+        ("tuesday", "Tuesday"),
+        ("wednesday", "Wednesday"),
+        ("thursday", "Thursday"),
+        ("friday", "Friday"),
+        ("saturday", "Saturday"),
+        ("sunday", "Sunday"),
+    ]
+
+    provider = models.ForeignKey(ClinicianUser, on_delete=models.CASCADE, related_name="appointment_slots")
+    timezone = models.CharField("Timezone", max_length=50, default="UTC")
+    dateandtime = models.DateTimeField("Date and Time")
+    day = models.CharField("Day", max_length=10, choices=DAY_CHOICES)
+    is_available = models.BooleanField("Available", default=True)
+    created_at = models.DateTimeField("Created At", auto_now_add=True)
+    updated_at = models.DateTimeField("Updated At", auto_now=True)
+
+    class Meta:
+        ordering = ['dateandtime']
+        unique_together = ['provider', 'dateandtime']
+
+    def __str__(self):
+        return f"{self.provider.firstname} {self.provider.lastname} - {self.dateandtime.strftime('%Y-%m-%d %H:%M')} ({self.day})"
+
+    def save(self, *args, **kwargs):
+        # Auto-populate day from dateandtime if not provided
+        if not self.day and self.dateandtime:
+            self.day = self.dateandtime.strftime('%A').lower()
+        super().save(*args, **kwargs)
+
+
+class Appointment(models.Model):
+    APPOINTMENT_MODE_CHOICES = [
+        ("in_person", "In Person"),
+        ("virtual", "Virtual"),
+        ("phone", "Phone"),
+    ]
+    
+    APPOINTMENT_TYPE_CHOICES = [
+        ("consultation", "Consultation"),
+        ("follow_up", "Follow Up"),
+        ("emergency", "Emergency"),
+        ("routine_checkup", "Routine Checkup"),
+        ("specialist_visit", "Specialist Visit"),
+        ("procedure", "Procedure"),
+    ]
+    
+    STATUS_CHOICES = [
+        ("scheduled", "Scheduled"),
+        ("confirmed", "Confirmed"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+        ("no_show", "No Show"),
+        ("rescheduled", "Rescheduled"),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="appointments")
+    provider = models.ForeignKey(ClinicianUser, on_delete=models.CASCADE, related_name="appointments")
+    appointment_slot = models.ForeignKey(AppointmentSlot, on_delete=models.CASCADE, related_name="bookings", null=True, blank=True)
+    appointment_mode = models.CharField("Appointment Mode", max_length=20, choices=APPOINTMENT_MODE_CHOICES)
+    appointment_type = models.CharField("Appointment Type", max_length=20, choices=APPOINTMENT_TYPE_CHOICES)
+    estimated_amount = models.DecimalField("Estimated Amount", max_digits=10, decimal_places=2, null=True, blank=True)
+    dateandtime = models.DateTimeField("Date and Time")
+    reason_for_visit = models.TextField("Reason for Visit")
+    status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default="scheduled")
+    notes = models.TextField("Notes", blank=True)
+    created_at = models.DateTimeField("Created At", auto_now_add=True)
+    updated_at = models.DateTimeField("Updated At", auto_now=True)
+
+    class Meta:
+        ordering = ['dateandtime']
+        unique_together = ['patient', 'provider', 'dateandtime']
+
+    def __str__(self):
+        return f"{self.patient.first_name} {self.patient.last_name} - {self.provider.firstname} {self.provider.lastname} - {self.dateandtime.strftime('%Y-%m-%d %H:%M')}"
+
+    def save(self, *args, **kwargs):
+        # If appointment_slot is provided, update the slot availability
+        if self.appointment_slot:
+            self.appointment_slot.is_available = False
+            self.appointment_slot.save()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # If appointment_slot exists, make it available again
+        if self.appointment_slot:
+            self.appointment_slot.is_available = True
+            self.appointment_slot.save()
+        super().delete(*args, **kwargs)

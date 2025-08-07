@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from .forms import UserAdminChangeForm
 from .forms import UserAdminCreationForm
 from .models import User, ClinicianUser, Patient
+from .models import AppointmentSlot
+from .models import Appointment
 
 if settings.DJANGO_ADMIN_FORCE_ALLAUTH:
     # Force the `admin` sign in process to go through the `django-allauth` workflow:
@@ -148,4 +150,64 @@ class PatientAdmin(admin.ModelAdmin):
                 contactnumber=user_data['contactnumber'],
                 role=user_data['role'],
                 status=user_data['status']
-            )
+    )
+
+
+@admin.register(AppointmentSlot)
+class AppointmentSlotAdmin(admin.ModelAdmin):
+    list_display = ["provider", "dateandtime", "day", "timezone", "is_available", "created_at"]
+    list_filter = ["day", "is_available", "timezone", "provider"]
+    search_fields = ["provider__firstname", "provider__lastname", "provider__emailid"]
+    ordering = ["dateandtime"]
+    date_hierarchy = "dateandtime"
+    fieldsets = (
+        (None, {"fields": ("provider", "dateandtime", "day")}),
+        (_("Settings"), {"fields": ("timezone", "is_available")}),
+        (_("Timestamps"), {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+    )
+    readonly_fields = ["created_at", "updated_at"]
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("provider", "dateandtime", "day", "timezone", "is_available"),
+            },
+        ),
+    )
+
+
+@admin.register(Appointment)
+class AppointmentAdmin(admin.ModelAdmin):
+    list_display = ["patient", "provider", "appointment_type", "appointment_mode", "dateandtime", "status", "estimated_amount"]
+    list_filter = ["status", "appointment_type", "appointment_mode", "dateandtime", "provider", "patient"]
+    search_fields = [
+        "patient__first_name", "patient__last_name", "patient__email",
+        "provider__firstname", "provider__lastname", "provider__emailid",
+        "reason_for_visit", "notes"
+    ]
+    ordering = ["dateandtime"]
+    date_hierarchy = "dateandtime"
+    readonly_fields = ["created_at", "updated_at"]
+    
+    fieldsets = (
+        (_("Appointment Details"), {"fields": ("patient", "provider", "appointment_slot")}),
+        (_("Appointment Information"), {"fields": ("appointment_mode", "appointment_type", "dateandtime", "reason_for_visit")}),
+        (_("Status & Payment"), {"fields": ("status", "estimated_amount")}),
+        (_("Additional Information"), {"fields": ("notes",)}),
+        (_("Timestamps"), {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+    )
+    
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("patient", "provider", "appointment_slot", "appointment_mode", "appointment_type", 
+                          "estimated_amount", "dateandtime", "reason_for_visit", "status", "notes"),
+            },
+        ),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('patient', 'provider', 'appointment_slot')

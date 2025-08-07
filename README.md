@@ -1,13 +1,11 @@
 # customehr
 
-A comprehensive healthcare user management system with role-based authentication and API endpoints.
+A clean, focused healthcare user management system with role-based authentication and REST API endpoints.
 
-[![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 ## 🏥 Healthcare User Management System
 
-This application provides a complete healthcare user management system with role-based access control for patients, healthcare providers, and administrative staff.
+This application provides a streamlined healthcare user management system with role-based access control for patients, healthcare providers, and administrative staff. Built with Django and Django REST Framework, it offers a clean, maintainable codebase focused on essential healthcare functionality.
 
 ### 🏗️ System Architecture
 
@@ -48,6 +46,10 @@ This application provides a complete healthcare user management system with role
 - **Identity**: sex, gender_identity, ethnicity, race, language
 - **Contact**: email, phone_number
 - **Address**: address_line1, address_line2, city, state, zip_code
+
+#### **Appointment Models**
+- **AppointmentSlot**: Available time slots for providers
+- **Appointment**: Booked appointments with patients and providers
 
 ### 🔐 Authentication System
 
@@ -94,6 +96,22 @@ curl -H "Authorization: Bearer <access_token>" \
 - `PUT /api/patients/{id}/` - Update patient (Staff only)
 - `DELETE /api/patients/{id}/` - Delete patient (Staff only)
 
+#### **Appointment Slots** (Provider/Staff Only)
+- `GET /api/appointment-slots/` - List slots (filtered by user role)
+- `POST /api/appointment-slots/` - Create new slot
+- `GET /api/appointment-slots/{id}/` - Get slot details
+- `PUT /api/appointment-slots/{id}/` - Update slot
+- `DELETE /api/appointment-slots/{id}/` - Delete slot
+
+#### **Appointment Booking** (Role-based Access)
+- `GET /api/appointments/` - List appointments (filtered by user role)
+- `POST /api/appointments/` - Book new appointment
+- `GET /api/appointments/{id}/` - Get appointment details
+- `PUT /api/appointments/{id}/` - Update appointment
+- `DELETE /api/appointments/{id}/` - Cancel appointment
+- `GET /api/appointments/my_appointments/` - Get user's appointments
+- `GET /api/appointments/available_slots/?provider_id={id}` - Get available slots for provider
+
 ### 🔒 Permission System
 
 #### **Custom Permission Classes**
@@ -106,7 +124,7 @@ curl -H "Authorization: Bearer <access_token>" \
 - **Providers**: Can see all patient records (read-only)
 - **Staff**: Can access and modify all data
 
-### 🛠️ Setup Instructions
+### 🚀 Quick Start
 
 #### **1. Install Dependencies**
 ```bash
@@ -124,40 +142,31 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-#### **4. Setup Test Data**
+#### **4. Start Development Server**
+```bash
+python manage.py runserver
+```
+
+#### **5. Setup Test Data**
 1. Access admin dashboard: `http://localhost:8000/admin/`
 2. Create Patient records
 3. Create ClinicianUser records
 4. Create User accounts with appropriate `user_type` and links
 
-#### **5. Test API Endpoints**
+#### **6. Test API Endpoints**
 ```bash
-# Start development server
-python manage.py runserver
-
 # Test login
 curl -X POST http://localhost:8000/api/login/ \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@example.com", "password": "password"}'
 ```
 
-### 📁 Key Files
+### 📁 Project Structure
 
-#### **Models & Database**
-- `customehr/users/models.py` - User, ClinicianUser, Patient models
-- `customehr/users/managers.py` - Custom user manager
-
-#### **API Implementation**
-- `customehr/users/api/serializers.py` - API serializers with validation
-- `customehr/users/api/views.py` - API viewsets with permissions
-- `config/api_router.py` - API endpoint routing
-
-#### **Authentication**
-- `config/settings/base.py` - JWT configuration
-- `requirements/base.txt` - JWT dependencies
-
-#### **Admin Interface**
-- `customehr/users/admin.py` - Django admin configuration
+```
+customehr/
+├── config/                 # Django setting
+```
 
 ### 🔧 Development Notes
 
