@@ -2,180 +2,260 @@
 
 A clean, focused healthcare user management system with role-based authentication and REST API endpoints.
 
-
 ## 🏥 Healthcare User Management System
 
 This application provides a streamlined healthcare user management system with role-based access control for patients, healthcare providers, and administrative staff. Built with Django and Django REST Framework, it offers a clean, maintainable codebase focused on essential healthcare functionality.
 
-### 🏗️ System Architecture
+---
 
-#### **User Types & Permissions**
+## 🤖 AI Development Prompt
 
-1. **Staff Users** (`user_type: "staff"`)
-   - Full administrative access
-   - Can manage all users, patients, and clinicians
-   - Can create, read, update, delete all records
-   - Access to admin dashboard
+This section provides the prompt used to design and develop this healthcare management system using AI tools. Future developers can use this as a reference to understand the development approach and methodology.
 
-2. **Provider Users** (`user_type: "provider"`)
-   - Healthcare professionals (Physicians, Nurses, Surgical Assistants)
-   - Can view all patient records (read-only)
-   - Linked to ClinicianUser model
-   - Cannot modify patient data
+### **Initial System Design Prompt**
 
-3. **Patient Users** (`user_type: "patient"`)
-   - Can only access their own patient record
-   - Read-only access to personal data
-   - Linked to Patient model
-   - Secure data isolation
+I need to design a comprehensive healthcare user management system with the following requirements:
 
-### 📊 Data Models
+### **System Overview:**
 
-#### **User Model** (`customehr/users/models.py`)
-- **Base User**: Email-based authentication with role management
-- **Fields**: name, email, password, contactnumber, role, status, user_type
-- **Links**: linked_patient, linked_clinician (foreign keys)
+- A Python-based healthcare management system
+- Role-based authentication for patients, healthcare providers, and administrative staff
+- REST API with JWT authentication
+- Appointment scheduling and management
+- Patient and provider data management
 
-#### **ClinicianUser Model**
-- **Roles**: Physicians, Nurses, Surgical Assistants
-- **Fields**: firstname, lastname, role, emailid, contactnumber, npi, location, language, supervising_clinician
-- **Supervision Levels**: None, Senior Clinician, Chief Clinician
+#### **User Types & Permissions:**
+1. Staff Users (user_type: "staff")
 
-#### **Patient Model**
-- **Demographics**: first_name, middle_name, last_name, preferred_name, date_of_birth
-- **Identity**: sex, gender_identity, ethnicity, race, language
-- **Contact**: email, phone_number
-- **Address**: address_line1, address_line2, city, state, zip_code
+- Full administrative access
+- Can manage all users, patients, and clinicians
+- Can create, read, update, delete all records
 
-#### **Appointment Models**
-- **AppointmentSlot**: Available time slots for providers
-- **Appointment**: Booked appointments with patients and providers
+2. Provider Users (user_type: "provider")
 
-### 🔐 Authentication System
+- Healthcare professionals (Physicians, Nurses, Surgical Assistants)
+- Can view all patient records (read-only)
+- Can manage their own appointment slots
+- Cannot modify patient data
 
-#### **JWT Authentication**
-- **Login Endpoint**: `POST /api/login/`
-- **Token Lifetime**: Access (1 hour), Refresh (1 day)
-- **Security**: Bearer token authentication
+3. Patient Users (user_type: "patient")
 
-#### **API Authentication Flow**
-```bash
-# 1. Login to get JWT tokens
-curl -X POST http://localhost:8000/api/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "password"}'
+- Can only access their own patient record
+- Can view and book appointments
+- Read-only access to personal data
 
-# 2. Use access token for API calls
-curl -H "Authorization: Bearer <access_token>" \
-  http://localhost:8000/api/patients/
-```
+#### **Data Models Required:**
 
-### 🌐 API Endpoints
+1. User Model (extends AbstractUser)
+- Email-based authentication
+- Role management (staff/provider/patient)
+- Links to Patient or ClinicianUser models
 
-#### **Authentication**
-- `POST /api/login/` - User login with JWT token response
+2. ClinicianUser Model
+- Healthcare provider information
+- Roles: Physicians, Nurses, Surgical Assistants
+- NPI number, location, language, supervising clinician
+- Supervision levels
 
-#### **User Management** (Staff Only)
+3. Patient Model
+- Complete patient demographics
+- Contact information
+- Address details
+- Medical identity information
+
+4. AppointmentSlot Model
+- Available time slots for providers
+- Date, time, availability status
+- Provider association
+
+5. Appointment Model
+- Booked appointments
+- Patient-provider relationships
+- Appointment types and modes
+- Status tracking
+
+#### **API Requirements:**
+
+- JWT authentication
+- Role-based access control
+- CRUD operations for all models
+- Appointment booking workflow
+- Available slots querying
+- User-specific data filtering
+
+#### **Security Requirements:**
+
+- HIPAA-compliant data access
+- Secure authentication
+- Role-based permissions
+- Data isolation between user types
+
+Please help me design the Django models, API endpoints, and permission system for this healthcare management system.
+
+
+### **Model Design Prompt**
+
+Based on the healthcare system requirements, I need to design Django models with the following specifications:
+
+#### **User Model Requirements:**
+
+- Extend AbstractUser with email as username
+- Add user_type field (staff/provider/patient)
+- Add contact number and role fields
+- Add foreign key relationships to Patient and ClinicianUser models
+- Implement proper validation and constraints
+
+#### **ClinicianUser Model Requirements:**
+
+- Healthcare provider information
+- Roles: Physicians, Nurses, Surgical Assistants
+- Fields: firstname, lastname, role, email, contact, NPI, location, language
+- Supervision levels: None, Senior Clinician, Chief Clinician
+- Proper validation for NPI numbers and email addresses
+
+#### **Patient Model Requirements:**
+
+- Complete patient demographics
+- Fields: first_name, middle_name, last_name, preferred_name, date_of_birth
+- Identity: sex, gender_identity, ethnicity, race, language
+- Contact: email, phone_number
+- Address: address_line1, address_line2, city, state, zip_code
+- HIPAA-compliant data structure
+
+#### **AppointmentSlot Model Requirements:**
+
+- Provider association
+- Date and time fields
+- Availability status
+- Timezone support
+- Day of week tracking
+- Unique constraints for provider and datetime
+
+#### **Appointment Model Requirements:**
+
+- Patient and provider relationships
+- Appointment slot association
+- Appointment types: consultation, follow_up, emergency, routine_checkup, specialist_visit, procedure
+- Appointment modes: in_person, virtual, phone
+- Status tracking: scheduled, confirmed, in_progress, completed, cancelled, no_show, rescheduled
+- Estimated amount and reason for visit
+- Notes and timestamps
+
+
+Please provide the Django model definitions with proper field types, constraints, and relationships.
+
+
+### **API Design Prompt**
+
+I need to design REST API endpoints for the healthcare management system with the following requirements
+
+#### **Authentication:**
+
+- JWT-based authentication
+- Login endpoint that returns user info and tokens
+- Token lifetime: Access (1 hour), Refresh (1 day)
+
+### 🌐 API Endpoints Required:
+
+
+1. Authentication Endpoints:
+- `POST /api/login/` - User login with JWT response
+
+2. User Management (Staff Only):
+
 - `GET /api/users/` - List all users
 - `POST /api/users/` - Create new user
 - `GET /api/users/{id}/` - Get user details
 - `PUT /api/users/{id}/` - Update user
 - `GET /api/users/me/` - Get current user info
 
-#### **Clinician Management** (Staff Only)
+3. Clinician Management (Staff Only):
+
 - `GET /api/clinician-users/` - List all clinicians
 - `POST /api/clinician-users/` - Create new clinician
 - `GET /api/clinician-users/{id}/` - Get clinician details
 - `PUT /api/clinician-users/{id}/` - Update clinician
 - `DELETE /api/clinician-users/{id}/` - Delete clinician
 
-#### **Patient Management** (Role-based Access)
+4. Patient Management (Role-based Access):
 - `GET /api/patients/` - List patients (filtered by user role)
 - `POST /api/patients/` - Create patient (Staff only)
 - `GET /api/patients/{id}/` - Get patient details
 - `PUT /api/patients/{id}/` - Update patient (Staff only)
 - `DELETE /api/patients/{id}/` - Delete patient (Staff only)
 
-#### **Appointment Slots** (Provider/Staff Only)
+5. Appointment Slots (Provider/Staff Only):
 - `GET /api/appointment-slots/` - List slots (filtered by user role)
 - `POST /api/appointment-slots/` - Create new slot
 - `GET /api/appointment-slots/{id}/` - Get slot details
 - `PUT /api/appointment-slots/{id}/` - Update slot
 - `DELETE /api/appointment-slots/{id}/` - Delete slot
 
-#### **Appointment Booking** (Role-based Access)
+6. Appointment Booking (Role-based Access):
 - `GET /api/appointments/` - List appointments (filtered by user role)
 - `POST /api/appointments/` - Book new appointment
 - `GET /api/appointments/{id}/` - Get appointment details
 - `PUT /api/appointments/{id}/` - Update appointment
 - `DELETE /api/appointments/{id}/` - Cancel appointment
 - `GET /api/appointments/my_appointments/` - Get user's appointments
-- `GET /api/appointments/available_slots/?provider_id={id}` - Get available slots for provider
+- `GET /api/appointments/available_slots/?provider_id={id} - Get available slots
 
-### 🔒 Permission System
+### Permission Requirements:
+- Custom permission classes for role-based access
+- Data filtering based on user type
+- Secure data access patterns
+- JSON responses with proper serialization
+- Error handling with appropriate HTTP status codes
+- Pagination for list endpoints
+- Proper validation and error messages
+
+
+Please help me design the Django REST Framework viewsets, serializers, and permission classes for these endpoints.
+
+### **Permission System Prompt**
+
+I need to implement a comprehensive permission system for the healthcare management system with the following requirements:
+
+### Permission Classes Required:
 
 #### **Custom Permission Classes**
-- `IsStaff` - Staff users only
-- `IsProviderOrStaff` - Providers and staff
-- `IsPatientOrProviderOrStaff` - All authenticated users
 
-#### **Data Access Rules**
-- **Patients**: Can only see their own record
-- **Providers**: Can see all patient records (read-only)
-- **Staff**: Can access and modify all data
+1. IsStaff - Staff users only
+- Full administrative access
+- Can access all data and perform all operations
 
-### 🚀 Quick Start
+2. IsProviderOrStaff - Providers and staff
+- Can access provider-related functionality
+- Can manage appointment slots and appointments
+3. IsPatientOrProviderOrStaff - All authenticated users
+- Basic access for all user types
+- Used for read-only operations
 
-#### **1. Install Dependencies**
-```bash
-pip install -r requirements/local.txt
-```
+### Data Access Rules:
+1. Patient Data Access:
+- Patients: Can only see their own record
+- Providers: Can see all patient records (read-only)
+- Staff: Can access and modify all patient data
 
-#### **2. Run Migrations**
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
+2. Provider Data Access:
+- Providers: Can see their own data and manage their slots
+- Staff: Can access and modify all provider data
+- Patients: No access to provider data
 
-#### **3. Create Superuser**
-```bash
-python manage.py createsuperuser
-```
+3. Appointment Data Access:
+- Patients: Can see their own appointments
+- Providers: Can see appointments they're involved in
+- Staff: Can see and manage all appointments
 
-#### **4. Start Development Server**
-```bash
-python manage.py runserver
-```
-
-#### **5. Setup Test Data**
-1. Access admin dashboard: `http://localhost:8000/admin/`
-2. Create Patient records
-3. Create ClinicianUser records
-4. Create User accounts with appropriate `user_type` and links
-
-#### **6. Test API Endpoints**
-```bash
-# Test login
-curl -X POST http://localhost:8000/api/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com", "password": "password"}'
-```
+4. Appointment Slot Access:
+- Providers: Can manage their own slots
+- Staff: Can manage all slots
+- Patients: Can view available slots for booking
 
 
-### 🔧 Development Notes
-
-#### **Adding New User Types**
-1. Update `USER_TYPE_CHOICES` in User model
-2. Create custom permission class
-3. Update viewset permissions
-4. Test access control
-
-#### **Extending Patient Data**
-1. Add fields to Patient model
-2. Update PatientSerializer
-3. Update admin interface
-4. Run migrations
-
-#### **API Documentation**
-- Swagger UI available at: `http://localhost:8000/api/docs/`
-- API Schema at: `http://localhost:8000/api/schema/`
+### Implementation Requirements:
+- Custom permission classes
+- Viewset-level permissions
+- Object-level permissions where needed
+- Proper error handling for unauthorized access
+- Audit trail considerations
