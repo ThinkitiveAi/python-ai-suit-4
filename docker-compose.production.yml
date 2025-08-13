@@ -2,17 +2,13 @@ volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
   production_traefik: {}
-  
   production_redis_data: {}
-  
-
 
 services:
   django: &django
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-
     image: customehr_production_django
     depends_on:
       - postgres
@@ -45,29 +41,11 @@ services:
     ports:
       - '0.0.0.0:80:80'
       - '0.0.0.0:443:443'
-      - '0.0.0.0:5555:5555'
 
   redis:
     image: docker.io/redis:6
-    
     volumes:
       - production_redis_data:/data
-    
-
-  celeryworker:
-    <<: *django
-    image: customehr_production_celeryworker
-    command: /start-celeryworker
-
-  celerybeat:
-    <<: *django
-    image: customehr_production_celerybeat
-    command: /start-celerybeat
-
-  flower:
-    <<: *django
-    image: customehr_production_flower
-    command: /start-flower
 
   awscli:
     build:
